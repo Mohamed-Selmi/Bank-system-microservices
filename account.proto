@@ -1,6 +1,6 @@
 syntax= "proto3";
 
-package bankapp;
+package account;
 
 message Account{
     string id=1;
@@ -43,7 +43,7 @@ message SearchAccountsResponse {
     repeated Account matchingAccounts=1;
 }
 
-service MovieService {
+service AccountService {
     rpc GetAccount(GetAccountRequest) returns (GetAccountResponse);
     rpc AddAccount(AddAccountRequest) returns (AddAccountResponse);
     rpc DeleteAccount(DeleteAccountRequest) returns (DeleteAccountResponse);

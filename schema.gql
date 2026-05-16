@@ -12,9 +12,9 @@ type Account{
     user_id: String!
 }
 
-Type Query{
+type Query{
     user(id: String!): User
-    users:[user]
+    users:[User]
     account(id: String!): Account
-    account:[Account]
+    accounts:[Account]
 }
