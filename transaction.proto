@@ -1,0 +1,30 @@
+syntax = "proto3";
+package transaction;
+
+message Transaction{
+    string id=1;
+    string senderAccountId=2;
+    string receiverAccountId=3;
+    float amount=4;
+    string timeStamp=5;
+    Status status=6;
+}
+enum Status{
+    PENDING=0;
+    SUCCESS=1;
+    FAILED=2;
+    REVERSED=3;
+}
+
+message TransferMoneyRequest{
+    Transaction transaction=1;
+}
+message TransferMoneyResponse{
+    string message=1;
+    Transaction transaction=2;
+}
+
+
+service AccountService {
+  rpc TransferMoney(TransferMoneyRequest) returns (TransferMoneyResponse);
+}

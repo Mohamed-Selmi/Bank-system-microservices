@@ -13,7 +13,7 @@ message GetAccountRequest {
   string account_id=1;
 }
 message GetAccountResponse {
-    Account account=1;
+    Account searchedAccount=1;
 }
 message AddAccountRequest {
     Account account=1;
@@ -37,11 +37,32 @@ message UpdateAccountResponse {
 }
 
 message SearchAccountsRequest {
-  string account_name=1;
+  float account_balance=1;
 }
 message SearchAccountsResponse {
     repeated Account matchingAccounts=1;
 }
+
+message WithdrawMoneyRequest{
+    string user_id=1;
+    string account_id=2;
+    float amount=3;
+}
+message WithdrawMoneyResponse{
+    Account account=1;
+    string message=2;
+}
+message DepositMoneyRequest{
+    string user_id=1;
+    string account_id=2;
+    float amount=3;
+    float tax=4;
+}
+message DepositMoneyResponse{
+    Account account=1; 
+}
+
+
 
 service AccountService {
     rpc GetAccount(GetAccountRequest) returns (GetAccountResponse);

@@ -20,7 +20,15 @@ defaults: true,
 oneofs: true,
 });
 const userProto=grpc.loadPackageDefinition(userProtoDefinition);
-
+const accountProtoPath='account.proto';
+const accountProtoDefinition=protoLoader.loadSync(accountProtoPath,{
+keepCase: true,
+longs: String,
+enums: String,
+defaults: true,
+oneofs: true,
+});
+const accountProto=grpc.loadPackageDefinition(accountProtoDefinition);
 const server = new ApolloServer({ typeDefs, resolvers });
 
 server.start().then(() => {
@@ -119,6 +127,104 @@ app.delete('/users/:id',(req,res)=>{
     })
 
 });
+
+
+
+app.get('/accounts', (req, res) => {
+const client = new accountProto.account.AccountService('localhost:50052',
+grpc.credentials.createInsecure());
+const balanceFilter= parseFloat(req.query.balance) || 0.0;
+
+const payload= { account_balance: balanceFilter};
+client.SearchAccounts(payload, (err, response) => {
+if (err) {
+res.status(500).send(err);
+} else {
+res.json(response.matchingAccounts || []);
+}
+});
+});
+
+app.get('/accounts/:id', (req, res) => {
+const client = new accountProto.account.AccountService('localhost:50052',
+grpc.credentials.createInsecure());
+const targetAccountId= req.params.id;
+const payload={account_id: targetAccountId};
+client.GetAccount(payload, (err, response) => {
+if (err) {
+res.status(500).send(err);
+} else {
+res.json(response.searchedAccount || {});
+}
+});
+});
+
+app.post('/accounts', (req, res) => {
+const client = new accountProto.account.AccountService('localhost:50052',
+grpc.credentials.createInsecure());
+const {id,code, balance,user_id} = req.body;
+const payload={account:{
+    id:id,
+    code:code,
+    balance:balance,
+    user_id:user_id
+}};
+client.AddAccount(payload, (err, response) => {
+if (err) {
+res.status(500).send(err);
+} else {
+res.status(201).json(response.account);
+}
+});
+});
+
+
+app.put('/accounts/:id',(req,res)=>{
+    const client = new accountProto.account.AccountService('localhost:50052',grpc.credentials.createInsecure()); 
+    const targetAccountId= req.params.id;
+    const {id,code, balance,user_id} = req.body;
+const payload={
+    account_id: targetAccountId,
+    account:{
+    id:id || targetAccountId,
+    code:code,
+    balance:balance,
+    user_id:user_id
+}};
+    client.UpdateAccount(payload,(err,response)=>{
+        if (err){
+        if (err.code==grpc.status.NOT_FOUND){
+            return res.status(404).json({error:err.details});
+        }
+        return res.status(500).json({error:"Server error", details:err.message})
+    }
+    res.json(response.account);
+}
+    
+);
+});
+app.delete('/accounts/:id',(req,res)=>{
+    const client = new accountProto.account.AccountService('localhost:50052',grpc.credentials.createInsecure()); 
+    const targetAccountId= req.params.id;
+    const payload={account_id: targetAccountId};
+    client.DeleteAccount(payload,(err,response)=>{
+    if (err) {
+        res.status(500).send(err);
+    }
+    else {
+        if (response.success){
+            res.status(200).json({message:response.message})
+        }
+        else{
+            res.status(404).json({message:response.message})
+        }
+    }
+    })
+
+});
+
+
+
 
 
 const port = 3000;

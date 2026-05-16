@@ -3,6 +3,7 @@ type User{
     name: String!
     CIN: String!
     account_id: String!
+    account: Account
 }
 
 type Account{
@@ -10,11 +11,20 @@ type Account{
     code: String!
     balance: Float!
     user_id: String!
+    user: User
 }
 
 type Query{
-    user(id: String!): User
-    users:[User]
-    account(id: String!): Account
-    accounts:[Account]
+    getUser(id: String!): User
+    getUsers:[User]
+    getAccount(id: String!): Account
+    getAccounts:[Account]
+}
+
+type Mutation {
+    addUser(id:String!, name:String!, CIN:String!,account_id:String!): User
+    updateUser(user_id:String!, id:String!, name:String!, CIN:String!,account_id:String!): User
+    addAccount(id:String,code:String!,balance:Float!,user_id:String!): Account
+    updateAccount(accountId:String!,id:String,code:String!,balance:Float!,user_id:String!): User
+
 }
