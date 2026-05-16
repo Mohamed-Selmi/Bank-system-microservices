@@ -5,7 +5,8 @@ message User{
     string id=1;
     string name=2;
     string CIN=3;
-    Account account=4;
+    string account_id=4;
+    //Account account=4;
 }
 
 message GetUserRequest {

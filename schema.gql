@@ -1,0 +1,20 @@
+type User{
+    id:String!
+    name: String!
+    CIN: String!
+    account_id: String!
+}
+
+type Account{
+    id: String!
+    code: String!
+    balance: Float!
+    user_id: String!
+}
+
+Type Query{
+    user(id: String!): User
+    users:[user]
+    account(id: String!): Account
+    account:[Account]
+}

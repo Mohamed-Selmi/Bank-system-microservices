@@ -17,6 +17,7 @@
     "@grpc/proto-loader": "^0.8.1",
     "cors": "^2.8.6",
     "express": "^5.2.1",
-    "graphql": "^16.14.0"
+    "graphql": "^16.14.0",
+    "mongoose": "^9.6.2"
   }
 }
