@@ -10,7 +10,7 @@ const typeDefs = require('fs').readFileSync('./schema.gql', 'utf8');
 const app = express();
 app.use(express.json());
 app.use(cors());
-
+const accountProtoPath='account.proto';
 const userProtoPath='user.proto';
 const userProtoDefinition=protoLoader.loadSync(userProtoPath,{
 keepCase: true,
@@ -20,7 +20,6 @@ defaults: true,
 oneofs: true,
 });
 const userProto=grpc.loadPackageDefinition(userProtoDefinition);
-const accountProtoPath='account.proto';
 const accountProtoDefinition=protoLoader.loadSync(accountProtoPath,{
 keepCase: true,
 longs: String,
@@ -222,8 +221,53 @@ app.delete('/accounts/:id',(req,res)=>{
     })
 
 });
+app.post('/accounts/:id/withdraw',(req,res)=>{
+    const client = new accountProto.account.AccountService('localhost:50052',grpc.credentials.createInsecure()); 
+    const targetAccountId= req.params.id;
+    const { user_id, amount } = req.body;
+    const payload = {user_id: user_id,account_id: targetAccountId, amount: parseFloat(amount)};
+        client.WithdrawMoney(payload,(err,response)=>{
+             if (err) {
+            if (err.code === grpc.status.NOT_FOUND) {
+                return res.status(404).json({ error: err.details });
+            }
+            if (err.code === grpc.status.PERMISSION_DENIED) {
+                return res.status(403).json({ error: err.details });
+            }
+            if (err.code === grpc.status.INVALID_ARGUMENT || err.code === grpc.status.FAILED_PRECONDITION) {
+                return res.status(400).json({ error: err.details });
+            }
+            return res.status(500).json({ error: "Server error", details: err.message });
+    }
+        res.json({
+            message: response.message,
+            account: response.account
+        });
+        });
+});
 
 
+app.post('/accounts/:id/deposit',(req,res)=>{
+    const client = new accountProto.account.AccountService('localhost:50052',grpc.credentials.createInsecure()); 
+    const targetAccountId= req.params.id;
+    const { user_id, amount } = req.body;
+    const payload = {user_id: user_id,account_id: targetAccountId, amount: parseFloat(amount)};
+        client.DepositMoney(payload,(err,response)=>{
+             if (err) {
+            if (err.code === grpc.status.NOT_FOUND) {
+                return res.status(404).json({ error: err.details });
+            }
+            if (err.code === grpc.status.INVALID_ARGUMENT || err.code === grpc.status.FAILED_PRECONDITION) {
+                return res.status(400).json({ error: err.details });
+            }
+            return res.status(500).json({ error: "Server error", details: err.message });
+    }
+        res.json({
+            message: response.message,
+            account: response.account
+        });
+        });
+});
 
 
 

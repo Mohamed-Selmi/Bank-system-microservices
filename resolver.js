@@ -52,6 +52,21 @@ const resolvers= {
                 });
             });
         },
+        getAccounts:(_,{balance})=>
+            {
+            return new Promise((resolve,reject)=>{
+                const payload= {account_balance:balance || 0}
+                accountClient.SearchAccounts(payload,(err,response)=>{
+                    if (err){
+                        reject(err);
+                    }
+                    else{
+                        resolve(response.matchingAccounts || []);
+                    }
+                });
+            });
+        },
+
         
     },
     Mutation: {
@@ -60,6 +75,62 @@ const resolvers= {
                 userClient.AddUser({ user: args }, (err, response) => {
                     if (err) reject(err);
                     else resolve(response.user);
+                });
+            });
+        },
+         updateUser: (_, {user_id,id,name,CIN,account_id}) => {
+            return new Promise((resolve, reject) => {
+                userClient.UpdateUser({ user_id,user: {id,name,CIN,account_id} }, (err, response) => {
+                    if (err) reject(err);
+                    else resolve(response.user);
+                });
+            });
+        },
+        deleteUser: (_,{userId}) => {
+             return new Promise((resolve, reject) => {
+                userClient.DeleteUser({ user_id:userId }, (err, response) => {
+                    if (err) reject(err);
+                    else resolve(response.user);
+                });
+            });
+        },
+            addAccount: (_, args) => {
+            return new Promise((resolve, reject) => {
+                accountClient.AddAccount({ account: args }, (err, response) => {
+                    if (err) reject(err);
+                    else resolve(response.account);
+                });
+            });
+        },
+         updateAccount: (_, {accountId, id, code, balance, user_id}) => {
+            return new Promise((resolve, reject) => {
+                accountClient.UpdateAccount({ account_id:accountId,account: { id, code, balance, user_id} }, (err, response) => {
+                    if (err) reject(err);
+                    else resolve(response.account);
+                });
+            });
+        },
+        deleteAccount: (_, { accountId }) => {
+            return new Promise((resolve, reject) => {
+                accountClient.DeleteAccount({ account_id: accountId }, (err, response) => {
+                    if (err) reject(err);
+                    else resolve(response.message);
+                });
+            });
+        },
+        withrawMoney: (_, { userId, accountId, amount }) => {
+            return new Promise((resolve, reject) => {
+                accountClient.WithdrawMoney({ user_id: userId, account_id: accountId, amount }, (err, response) => {
+                    if (err) reject(err);
+                    else resolve(response);
+                });
+            });
+        },
+        depositMoney: (_, { userId, accountId, amount }) => {
+            return new Promise((resolve, reject) => {
+                accountClient.depositMoney({ user_id: userId, account_id: accountId, amount }, (err, response) => {
+                    if (err) reject(err);
+                    else resolve(response);
                 });
             });
         },
@@ -77,7 +148,7 @@ const resolvers= {
      Account :{
         user:(parent)=>{
             return new Promise((resolve,reject)=>{
-                userClient.getUser({user_id:parent.user_id}, (err,response)=>{
+                userClient.GetUser({user_id:parent.user_id}, (err,response)=>{
                     if (err) resolve(null);
                     else resolve(response.searchedUser)
                 })

@@ -12,6 +12,7 @@ defaults: true,
 oneofs: true,
 });
 const accountProto=grpc.loadPackageDefinition(accountProtoDefinition).account;
+
 const accountService={
     AddAccount: async (call, callback)=>{
         try{
@@ -72,10 +73,80 @@ const accountService={
             callback({code:grpc.status.INTERNAL,details:err.message});
         }
     },
+    WithdrawMoney: async (call, callback) => {
+        try{
+            const {user_id, account_id,amount}= call.request;
+
+            const foundAccount= await Account.findOne({id:account_id});
+
+            if (!foundAccount) {
+                return callback({ 
+                code: grpc.status.NOT_FOUND, details: "Account does not exist" });
+            }
+            if (foundAccount.user_id!=user_id){ return callback({
+                code: grpc.status.PERMISSION_DENIED, details: "You are not the owner of the account" });
+
+            }
+        
+            if (amount<=0) {
+                return callback({
+                    code:grpc.status.INVALID_ARGUMENT,
+                    details: "Withdrawal amount must be greater than zero"
+                })
+            }
+            if (foundAccount.balance< amount){
+                  return callback({
+                    code:grpc.status.FAILED_PRECONDITION,
+                    details: `You don't have enough money ${foundAccount.balance}.`
+                })
+            }
+            foundAccount.balance-=amount;
+            await foundAccount.save();
+            callback(null, {message: `Successfuly withdrew ${amount}`, account: foundAccount.toJSON() });
+        }
+         catch(err){
+            callback({code:grpc.status.INTERNAL,details:err.message});
+        }
+    },
+
+    DepositMoney: async (call, callback) => {
+         try{
+            const {user_id, account_id}= call.request;
+            let amount=call.request.amount;
+            const foundAccount= await Account.findOne({id:account_id});
+
+            if (!foundAccount) {
+                return callback({ 
+                code: grpc.status.NOT_FOUND, details: "Account does not exist" });
+            }
+              if (amount<=0) {
+                return callback({
+                    code:grpc.status.INVALID_ARGUMENT,
+                    details: "Deposit amount must be greater than zero"
+                })
+            }
+            if (foundAccount.user_id!=user_id){ 
+                const tax=0.08*amount;
+                amount=amount-tax;
+                foundAccount.balance+=amount;
+                await foundAccount.save();
+                return callback(null, {message: `Successfuly Deposited amount ${amount}, deducted ${tax} since you are not the account's owner  `, account: foundAccount.toJSON() });
+            }
+            foundAccount.balance+=amount;
+            await foundAccount.save();
+            callback(null, {message: `Successfuly Deposited amount ${amount}`, account: foundAccount.toJSON() });
+        }
+         catch(err){
+            callback({code:grpc.status.INTERNAL,details:err.message});
+        }
+    }
 }
 
 const server=new grpc.Server();
 server.addService(accountProto.AccountService.service,accountService);
+
+const methodNames = Object.keys(accountProto.AccountService.service);
+console.log("Server is officially hosting these methods:", methodNames);
 const port=50052;
 server.bindAsync(`0.0.0.0:${port}`, grpc.ServerCredentials.createInsecure(),
 (err, port) => {
