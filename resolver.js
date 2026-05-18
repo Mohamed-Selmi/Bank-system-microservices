@@ -3,7 +3,7 @@ const protoLoader = require('@grpc/proto-loader');
 const { Query } = require('mongoose');
 const userProtoPath='user.proto';
 const accountProtoPath='account.proto';
-
+const transactionProtoPath='transaction.proto';
 const userProtoDefinition=protoLoader.loadSync(userProtoPath,{
 keepCase: true,
 longs: String,
@@ -18,10 +18,20 @@ enums: String,
 defaults: true,
 oneofs: true,
 });
+const transactionProtoDefinition=protoLoader.loadSync(transactionProtoPath,{
+keepCase: true,
+longs: String,
+enums: String,
+defaults: true,
+oneofs: true,
+});
 const userProto=grpc.loadPackageDefinition(userProtoDefinition);
 const accountProto=grpc.loadPackageDefinition(accountProtoDefinition);
+const transactionProto=grpc.loadPackageDefinition(transactionProtoDefinition);
+
 const userClient = new userProto.user.UserService('localhost:50051',grpc.credentials.createInsecure());
 const accountClient = new accountProto.account.AccountService('localhost:50052',grpc.credentials.createInsecure()); 
+const transactionClient = new transactionProto.transaction.TransactionService('localhost:50053',grpc.credentials.createInsecure()); 
 
 
 const resolvers= {
@@ -134,6 +144,22 @@ const resolvers= {
                 });
             });
         },
+        transferMoney: (_,{ senderAccountId, receiverAccountId, amount }) =>{
+             return new Promise((resolve, reject) => {
+                transactionClient.transferMoney({ senderAccountId:senderAccountId, receiverAccountId:receiverAccountId, amount:amount }, (err, response) => {
+                    if (err) reject(err);
+                    else resolve(response);
+                });
+            });
+        },
+        revertTransaction:(_,{transaction_id})=>{
+              return new Promise((resolve, reject) => {
+                transactionClient.revertTransaction({ transaction_id:transaction_id }, (err, response) => {
+                    if (err) reject(err);
+                    else resolve(response);
+                });
+            });
+        }
     },
     User :{
         account:(parent)=>{

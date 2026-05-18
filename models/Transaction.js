@@ -4,7 +4,7 @@ const TransactionSchema= new mongoose.Schema({
     senderAccountId: {type: String, required:true},
     receiverAccountId: {type: String, required:true},
     amount: {type:Number,required:true,},
-    status:{type:String,default:'In progress'},
+    status:{type:String,default:'PENDING'},
     timeStamp:{type:Date,default:Date.now}
     /*account: {
         type :mongoose.Schema.types.ObjectId,
@@ -15,7 +15,7 @@ const TransactionSchema= new mongoose.Schema({
     toJSON:{
         virtuals:true,
         transform: (doc,ret)=>{
-            
+                ret.id = ret._id.toString();
                 delete ret._id;  
                 delete ret.__v;
                 return ret;

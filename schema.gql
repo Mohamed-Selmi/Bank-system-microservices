@@ -1,3 +1,4 @@
+scalar Date
 type User{
     id:String!
     name: String!
@@ -17,12 +18,39 @@ type DepositMoneyResponsePayload {
     message: String!
     account: Account
 }
+enum Status {
+    PENDING
+    SUCCESS
+    FAILED
+    REVERTED
+}
+
+type Transaction {
+    id: String!
+    senderAccountId: String!
+    receiverAccountId: String!
+    amount: Float!
+    status: Status!
+    timeStamp: Date!
+}
+
+type TransferMoneyResponsePayload {
+    message: String!
+    transaction: Transaction
+}
+
+type RevertTransactionResponsePayload {
+    message: String!
+    transaction: Transaction
+}
 
 type Query{
     getUser(id: String!): User
     getUsers:[User]
     getAccount(id: String!): Account
     getAccounts(balance: Float):[Account]
+    getTransaction(id: String!): Transaction
+    getTransactions: [Transaction]
 }
 
 type Mutation {
@@ -34,6 +62,7 @@ type Mutation {
     deleteAccount(accountId:String!):String
     withrawMoney(userId: String!, accountId: String!, amount: Float!): DepositMoneyResponsePayload
     depositMoney(userId: String!, accountId: String!, amount: Float!): DepositMoneyResponsePayload
-
+    transferMoney(senderAccountId: String!, receiverAccountId: String!, amount: Float!): TransferMoneyResponsePayload
+    revertTransaction(transaction_id: String!): RevertTransactionResponsePayload
 }
 

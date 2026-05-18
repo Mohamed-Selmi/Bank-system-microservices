@@ -12,6 +12,8 @@ app.use(express.json());
 app.use(cors());
 const accountProtoPath='account.proto';
 const userProtoPath='user.proto';
+const transactionProtoPath='transaction.proto';
+
 const userProtoDefinition=protoLoader.loadSync(userProtoPath,{
 keepCase: true,
 longs: String,
@@ -28,6 +30,15 @@ defaults: true,
 oneofs: true,
 });
 const accountProto=grpc.loadPackageDefinition(accountProtoDefinition);
+const transactionProtoDefinition=protoLoader.loadSync(transactionProtoPath,{
+keepCase: true,
+longs: String,
+enums: String,
+defaults: true,
+oneofs: true,
+});
+const transactionProto=grpc.loadPackageDefinition(transactionProtoDefinition);
+
 const server = new ApolloServer({ typeDefs, resolvers });
 
 server.start().then(() => {
@@ -269,6 +280,94 @@ app.post('/accounts/:id/deposit',(req,res)=>{
         });
 });
 
+app.post('/transactions',(req,res)=>{
+    const client = new transactionProto.transaction.TransactionService('localhost:50053',grpc.credentials.createInsecure()); 
+    const {senderAccountId,receiverAccountId,amount}= req.body;
+    const payload = {senderAccountId: senderAccountId,receiverAccountId: receiverAccountId, amount: parseFloat(amount)};
+    client.TransferMoney(payload,(err,response)=>{
+         if (err) {
+            if (err.code === grpc.status.NOT_FOUND) {
+                return res.status(404).json({ error: err.details });
+            }
+            if (err.code === grpc.status.INVALID_ARGUMENT || err.code === grpc.status.FAILED_PRECONDITION) {
+                return res.status(400).json({ error: err.details });
+            }
+            return res.status(500).json({ error: "Server error", details: err.message });
+    }
+     res.json({
+            message: response.message,
+            account: response.transaction
+        });
+    });
+});
+
+app.put('/transactions/:id',(req,res)=>{
+    const client = new transactionProto.transaction.TransactionService('localhost:50053',grpc.credentials.createInsecure()); 
+    const targetTransactionId= req.params.id;
+    const payload = { transaction_id: targetTransactionId };
+    client.RevertTransaction(payload,(err,response)=>{
+        if (err){
+        if (err.code==grpc.status.NOT_FOUND){
+            return res.status(404).json({error:err.details});
+        }
+        return res.status(500).json({error:"Server error", details:err.message})
+    }
+     res.json({
+            message: response.message,
+            account: response.transaction
+        });
+});
+});
+app.post('/transactions',(req,res)=>{
+    const client = new transactionProto.transaction.TransactionService('localhost:50053',grpc.credentials.createInsecure()); 
+    const {senderAccountId,receiverAccountId,amount}= req.body;
+    const payload = {senderAccountId: senderAccountId,receiverAccountId: receiverAccountId, amount: parseFloat(amount)};
+    client.TransferMoney(payload,(err,response)=>{
+         if (err) {
+            if (err.code === grpc.status.NOT_FOUND) {
+                return res.status(404).json({ error: err.details });
+            }
+            if (err.code === grpc.status.INVALID_ARGUMENT || err.code === grpc.status.FAILED_PRECONDITION) {
+                return res.status(400).json({ error: err.details });
+            }
+            return res.status(500).json({ error: "Server error", details: err.message });
+    }
+     res.json({
+            message: response.message,
+            account: response.transaction
+        });
+    });
+});
+
+app.put('/transactions/:id',(req,res)=>{
+    const client = new transactionProto.transaction.TransactionService('localhost:50053',grpc.credentials.createInsecure()); 
+    const targetTransactionId= req.params.id;
+    const payload = { transaction_id: targetTransactionId };
+    client.RevertTransaction(payload,(err,response)=>{
+        if (err){
+        if (err.code==grpc.status.NOT_FOUND){
+            return res.status(404).json({error:err.details});
+        }
+        return res.status(500).json({error:"Server error", details:err.message})
+    }
+     res.json({
+            message: response.message,
+            account: response.transaction
+        });
+});
+
+});
+app.get('/transactions',(req,res)=>{
+    const client = new transactionProto.transaction.TransactionService('localhost:50053',grpc.credentials.createInsecure()); 
+    client.GetAllTransactions({}, (err, response) => {
+if (err) {
+res.status(500).send(err);
+} else {
+res.json(response.transactions || []);
+}
+});
+
+});
 
 
 const port = 3000;

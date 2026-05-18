@@ -13,18 +13,36 @@ enum Status{
     PENDING=0;
     SUCCESS=1;
     FAILED=2;
-    REVERSED=3;
+    REVERTED=3;
 }
 
 message TransferMoneyRequest{
-    Transaction transaction=1;
+    //Transaction transaction=1;
+    string senderAccountId=1;
+    string receiverAccountId=2;
+    float amount=3;
 }
 message TransferMoneyResponse{
     string message=1;
     Transaction transaction=2;
 }
+message RevertTransactionRequest{
+    string transaction_id=1;
+}
+message RevertTransactionResponse{
+    string message=1;
+    Transaction transaction=2;
+}
 
+message GetTransactionsRequest{
 
-service AccountService {
+}
+message GetTransactionsResponse{
+    repeated Transaction transactions = 1;
+}
+
+service TransactionService {
   rpc TransferMoney(TransferMoneyRequest) returns (TransferMoneyResponse);
+  rpc RevertTransaction(RevertTransactionRequest) returns (RevertTransactionResponse);
+  rpc GetAllTransactions(GetTransactionsRequest) returns (GetTransactionsResponse);
 }

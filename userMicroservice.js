@@ -61,7 +61,7 @@ const userService={
     DeleteUser: async (call,callback)=>{
         try{
             const user_id = call.request.user_id || "";
-            const result= await await User.findOneAndDelete({id:user_id});
+            const result= await User.findOneAndDelete({id:user_id});
             if (!result) 
                 {return callback(null,
                 { success: false, message: "User not found" });
